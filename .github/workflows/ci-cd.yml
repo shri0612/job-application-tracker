@@ -35,15 +35,18 @@ jobs:
       run: bandit -r . || true
 
     # -------------------------
-    # SonarCloud Scan (Correct Action)
+    # SonarCloud (Correct Action + Correct Inputs)
     # -------------------------
     - name: SonarCloud Scan
-      uses: SonarSource/sonarqube-scan-action@v2.0.1
+      uses: SonarSource/sonarcloud-github-action@master
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
-        projectKey: ${{ secrets.SONAR_PROJECT_KEY }}
-        organization: ${{ secrets.SONAR_ORG }}
+        projectBaseDir: .
+        args: >
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+          -Dsonar.organization=${{ secrets.SONAR_ORG }}
+          -Dsonar.python.version=3.10
 
     # -------------------------
     # ZAP Security Scan
@@ -68,7 +71,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Deploy over SSH
+    - name: Deploy to EC2 over SSH
       uses: appleboy/ssh-action@v0.1.10
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -81,7 +84,7 @@ jobs:
 
           echo ">>> Checking repo directory..."
           if [ ! -d repo ]; then
-              echo ">>> Cloning repo first time"
+              echo ">>> First-time setup: cloning repo"
               git clone https://github.com/${{ github.repository }} repo
           else
               echo ">>> Pulling latest code"
@@ -100,7 +103,7 @@ jobs:
           cd repo
           python manage.py migrate --noinput
 
-          echo ">>> Collecting static"
+          echo ">>> Collecting static files"
           python manage.py collectstatic --noinput
 
           echo ">>> Restarting Gunicorn"
