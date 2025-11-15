@@ -1,0 +1,101 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+
+  # ----------------
+  # 1. CI STAGE
+  # ----------------
+  ci:
+    name: Static Analysis + Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install flake8 bandit
+
+    - name: Run flake8
+      run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
+
+    - name: Run bandit
+      run: bandit -r . || true
+
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with:
+        args: >
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+          -Dsonar.organization=${{ secrets.SONAR_ORG }}
+          -Dsonar.python.version=3.10
+
+    - name: OWASP ZAP Baseline Scan
+      uses: zaproxy/action-baseline@v0.7.0
+      with:
+        target: "http://${{ secrets.EC2_HOST }}"
+        allow_issue_writing: false
+
+
+  # ----------------
+  # 2. CD STAGE
+  # ----------------
+  deploy:
+    name: Deploy to EC2
+    needs: ci
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Deploy over SSH
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          cd ~/jobtracker
+
+          echo "Pulling latest code..."
+          if [ ! -d repo ]; then
+            git clone https://github.com/${{ github.repository }} repo
+          else
+            cd repo
+            git pull origin main
+            cd ..
+          fi
+
+          source venv/bin/activate
+
+          cd repo
+
+          echo "Installing dependencies..."
+          pip install -r requirements.txt
+
+          echo "Running migrations..."
+          python manage.py migrate --noinput
+
+          echo "Collecting static files..."
+          python manage.py collectstatic --noinput
+
+          echo "Restarting Gunicorn..."
+          sudo systemctl restart gunicorn
+
+          echo "Deployment completed."
