@@ -5,7 +5,6 @@ on:
     branches: ["main"]
 
 jobs:
-
   # -------------------------
   # 1. CI STAGE
   # -------------------------
@@ -14,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -34,11 +32,11 @@ jobs:
       - name: Run bandit
         run: bandit -r . || true
 
-      # ---------------------------------------------------
-      #  SonarCloud Scan (your version, only indented)
-      # ---------------------------------------------------
+      # ----------------------------------------------------
+      # SonarCloud Scan (recommended version)
+      # ----------------------------------------------------
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v6.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
@@ -48,6 +46,7 @@ jobs:
             -Dsonar.organization=${{ secrets.SONAR_ORG }}
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.python.version=3.10
+
       # -------------------------
       # ZAP Security Scan
       # -------------------------
@@ -56,7 +55,6 @@ jobs:
         with:
           target: "http://${{ secrets.EC2_HOST }}"
           allow_issue_writing: false
-
 
   # -------------------------
   # 2. CD STAGE
@@ -67,7 +65,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -79,9 +76,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             echo ">>> CONNECTED TO EC2"
-
             cd ~/jobtracker
-
             echo ">>> Checking repo directory..."
             if [ ! -d repo ]; then
                 echo ">>> First-time setup: cloning repo"
@@ -92,21 +87,15 @@ jobs:
                 git pull origin main
                 cd ..
             fi
-
             echo ">>> Activating virtualenv"
             source venv/bin/activate
-
             echo ">>> Installing dependencies"
             pip install -r repo/requirements.txt || true
-
             echo ">>> Running migrations"
             cd repo
             python manage.py migrate --noinput
-
             echo ">>> Collecting static files"
             python manage.py collectstatic --noinput
-
             echo ">>> Restarting Gunicorn"
             sudo systemctl restart gunicorn
-
             echo ">>> DEPLOYMENT COMPLETED SUCCESSFULLY"
