@@ -15,47 +15,47 @@ jobs:
 
     steps:
 
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt || true
-        pip install flake8 bandit
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt || true
+          pip install flake8 bandit
 
-    - name: Run flake8
-      run: flake8 . || true
+      - name: Run flake8
+        run: flake8 . || true
 
-    - name: Run bandit
-      run: bandit -r . || true
+      - name: Run bandit
+        run: bandit -r . || true
 
-    # ---------------------------------------------------
-    # ✅ FIXED → NEW OFFICIAL SONARCLOUD SCANNER (v2)
-    # ---------------------------------------------------
-    - name: SonarCloud Scan
-      uses: sonarsource/sonarqube-scan-action@v2
-      with:
-        projectBaseDir: .
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: "https://sonarcloud.io"
-        SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
-        SONAR_ORGANIZATION: ${{ secrets.SONAR_ORG }}
+      # ---------------------------------------------------
+      #  SonarCloud Scan (your version, only indented)
+      # ---------------------------------------------------
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: .
+          args: |
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ secrets.SONAR_ORG }}
+            -Dsonar.python.version=3.10
 
-    # -------------------------
-    # ZAP Security Scan
-    # -------------------------
-    - name: OWASP ZAP Baseline Scan
-      uses: zaproxy/action-baseline@v0.7.0
-      with:
-        # When running CI, your EC2 must already be deployed once
-        target: "http://${{ secrets.EC2_HOST }}"
-        allow_issue_writing: false
+      # -------------------------
+      # ZAP Security Scan
+      # -------------------------
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          target: "http://${{ secrets.EC2_HOST }}"
+          allow_issue_writing: false
 
 
   # -------------------------
@@ -68,45 +68,45 @@ jobs:
 
     steps:
 
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Deploy to EC2 over SSH
-      uses: appleboy/ssh-action@v0.1.10
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          echo ">>> CONNECTED TO EC2"
+      - name: Deploy to EC2 over SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo ">>> CONNECTED TO EC2"
 
-          cd ~/jobtracker
+            cd ~/jobtracker
 
-          echo ">>> Checking repo directory..."
-          if [ ! -d repo ]; then
-              echo ">>> First-time setup: cloning repo"
-              git clone https://github.com/${{ github.repository }} repo
-          else
-              echo ">>> Pulling latest code"
-              cd repo
-              git pull origin main
-              cd ..
-          fi
+            echo ">>> Checking repo directory..."
+            if [ ! -d repo ]; then
+                echo ">>> First-time setup: cloning repo"
+                git clone https://github.com/${{ github.repository }} repo
+            else
+                echo ">>> Pulling latest code"
+                cd repo
+                git pull origin main
+                cd ..
+            fi
 
-          echo ">>> Activating virtualenv"
-          source venv/bin/activate
+            echo ">>> Activating virtualenv"
+            source venv/bin/activate
 
-          echo ">>> Installing dependencies"
-          pip install -r repo/requirements.txt || true
+            echo ">>> Installing dependencies"
+            pip install -r repo/requirements.txt || true
 
-          echo ">>> Running migrations"
-          cd repo
-          python manage.py migrate --noinput
+            echo ">>> Running migrations"
+            cd repo
+            python manage.py migrate --noinput
 
-          echo ">>> Collecting static files"
-          python manage.py collectstatic --noinput
+            echo ">>> Collecting static files"
+            python manage.py collectstatic --noinput
 
-          echo ">>> Restarting Gunicorn"
-          sudo systemctl restart gunicorn
+            echo ">>> Restarting Gunicorn"
+            sudo systemctl restart gunicorn
 
-          echo ">>> DEPLOYMENT COMPLETED SUCCESSFULLY"
+            echo ">>> DEPLOYMENT COMPLETED SUCCESSFULLY"
