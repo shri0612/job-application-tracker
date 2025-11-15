@@ -53,7 +53,7 @@ jobs:
       - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.7.0
         with:
-          docker_name: ghcr.io/zaproxy/zap-stable
+          docker_name: owasp/zap2docker-weekly
           target: "http://${{ secrets.EC2_HOST }}"
           allow_issue_writing: false
 
