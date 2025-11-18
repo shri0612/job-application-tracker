@@ -40,9 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'jobs',
     "accounts.apps.AccountsConfig",
     "storages",
+    'jobs',
+
 ]
 
 MIDDLEWARE = [
@@ -64,7 +65,11 @@ AUTHENTICATION_BACKENDS = [
 
 
 
+
+# ROOT_URLCONF = 'jobApplicationTracker.jobApplicationTracker.urls'
 ROOT_URLCONF = 'jobApplicationTracker.urls'
+
+
 
 TEMPLATES = [
     {
@@ -82,7 +87,11 @@ TEMPLATES = [
     },
     
 ]
+
+# WSGI_APPLICATION = 'jobApplicationTracker.jobApplicationTracker.wsgi.application'
 WSGI_APPLICATION = 'jobApplicationTracker.wsgi.application'
+
+
 
 
 # Database
