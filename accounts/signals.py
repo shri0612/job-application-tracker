@@ -10,34 +10,28 @@ from django.core.mail import send_mail
 from django.conf import settings
 
 
-# 🔔 Send login alert when user logs in
+
 @receiver(user_logged_in)
 def send_login_alert(sender, request, user, **kwargs):
     print('User check',user)
-    # if not user.email:
-    #     print("⚠️ No email set for:", user.username)
-    #     return
-
-    # display_name = user.username or user.email.split("@")[0]
-    # subject = f"Welcome {display_name}, your login was successful 🎉"
-    # print(user.username)
+    
 
     try:
         user_email = user.email
         user_name = user.get_full_name() or user.username
         login_time = datetime.now().strftime("%B %d, %Y at %I:%M %p")
 
-        # Get user's IP address
+       
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
             ip_address = x_forwarded_for.split(',')[0]
         else:
             ip_address = request.META.get('REMOTE_ADDR')
 
-        # Email subject
+       
         subject = '🔐 Login Notification - Your Account Activity'
 
-        # Plain text message
+        
         message = f"""
         Hello {user_name},
 
@@ -54,7 +48,7 @@ def send_login_alert(sender, request, user, **kwargs):
         The Bakery Team
         """
 
-        # HTML message
+        
         html_message = f"""
         <html>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -84,14 +78,14 @@ def send_login_alert(sender, request, user, **kwargs):
         </html>
         """
 
-        # Send the email
+        
         send_mail(
             subject,
             message,
             settings.DEFAULT_FROM_EMAIL,
             [user_email],
             html_message=html_message,
-            fail_silently=True,  # Don’t break login if email fails
+            fail_silently=True,  
         )
         print(f"✓ Login notification email sent to {user_email}")
 
@@ -100,25 +94,10 @@ def send_login_alert(sender, request, user, **kwargs):
  
  
 
-    # # Plain text fallback
-    # text_content = strip_tags(html_content)
-
-    # email = EmailMultiAlternatives(
-    #     subject,
-    #     text_content,
-    #     "shri2178499@gmail.com",   # FROM (must be verified in SES)
-    #     [user.email],              # TO (must be verified in sandbox)
-    # )
-    # email.attach_alternative(html_content, "text/html")
-
-    # try:
-    #     email.send()
-    #     print(f"✅ Login email sent to {user.email}")
-    # except Exception as e:
-    #     print("❌ Login alert email failed:", repr(e))
+   
 
 
-# 📧 Ensure all user emails are stored in lowercase
+
 @receiver(pre_save, sender=User)
 def lowercase_email(sender, instance, **kwargs):
     if instance.email:
