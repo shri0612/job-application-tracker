@@ -53,61 +53,59 @@ jobs:
   # 2. CD — Deploy to EC2
   # ----------------------------------------------------
   deploy:
-  name: Deploy to EC2
-  needs: ci
-  runs-on: ubuntu-latest
+    name: Deploy to EC2
+    needs: ci
+    runs-on: ubuntu-latest
 
-  steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Deploy to EC2
-      uses: appleboy/ssh-action@v0.1.10
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          echo ">>> CONNECTED TO EC2"
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo ">>> CONNECTED TO EC2"
 
-          # Go to project root on EC2
-          cd ~/jobtracker
+            cd ~/jobtracker
 
-          echo ">>> Pulling latest code…"
-          if [ ! -d repo ]; then
-              git clone https://github.com/${{ github.repository }} repo
-          else
-              cd repo && git fetch --all && git reset --hard origin/main && cd ..
-          fi
+            echo ">>> Pulling latest code…"
+            if [ ! -d repo ]; then
+                git clone https://github.com/${{ github.repository }} repo
+            else
+                cd repo && git fetch --all && git reset --hard origin/main && cd ..
+            fi
 
-          echo ">>> Activating virtual environment…"
-          source venv/bin/activate
+            echo ">>> Activating virtual environment…"
+            source venv/bin/activate
 
-          echo ">>> Installing dependencies…"
-          pip install --upgrade pip
-          pip install -r repo/requirements.txt
+            echo ">>> Installing dependencies…"
+            pip install --upgrade pip
+            pip install -r repo/requirements.txt
 
-          echo ">>> Running migrations…"
-          cd repo
-          python manage.py migrate --noinput
+            echo ">>> Running migrations…"
+            cd repo
+            python manage.py migrate --noinput
 
-          echo ">>> Collecting static files…"
-          python manage.py collectstatic --noinput
+            echo ">>> Collecting static files…"
+            python manage.py collectstatic --noinput
 
-          echo ">>> Restarting Gunicorn…"
-          sudo systemctl restart gunicorn
+            echo ">>> Restarting Gunicorn…"
+            sudo systemctl restart gunicorn
 
-          echo ">>> Deployment complete!"
+            echo ">>> Deployment complete!"
 
 
   # ----------------------------------------------------
-  # 3. OWASP ZAP SCAN — After Deployment
+  # 3. (Optional) OWASP ZAP SCAN — After Deployment
   # ----------------------------------------------------
   # zap_scan:
   #   name: OWASP ZAP Scan
   #   needs: deploy
   #   runs-on: ubuntu-latest
-
   #   steps:
   #     - name: Run ZAP Baseline Scan
   #       uses: zaproxy/action-baseline@v0.7.0
