@@ -46,5 +46,5 @@ class ProfileForm(forms.ModelForm):
         model = Profile
         fields = [
             'role', 'date_of_birth', 'phone_number',
-            'address', 'city', 'postal_code', 'profile_picture'
+            'address', 'city', 'postal_code', 
         ]

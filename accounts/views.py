@@ -21,28 +21,37 @@ def _generate_username(length=10):
 
 @never_cache
 def register(request):
-    """Handles new user registration with profile picture upload."""
+    """Handles new user registration (no profile picture, Gmail SMTP)."""
+
     if request.user.is_authenticated:
         return redirect("job_list")
 
     if request.method == "POST":
         user_form = CustomUserCreationForm(request.POST)
-        profile_form = ProfileForm(request.POST, request.FILES)  # 🧠 include request.FILES for image
+        profile_form = ProfileForm(request.POST)
 
         if user_form.is_valid() and profile_form.is_valid():
-            # ✅ Create User
+
+            # -------------------------
+            # Create User
+            # -------------------------
             user = user_form.save(commit=False)
             user.username = user.email.split("@")[0].lower()
             user.save()
 
-            # ✅ Create Profile
+            # -------------------------
+            # Create Profile
+            # -------------------------
             profile = profile_form.save(commit=False)
             profile.user = user
             profile.email = user.email
             profile.save()
 
-            # ✅ Send Welcome Email
+            # -------------------------
+            # Send Welcome Email (Gmail SMTP)
+            # -------------------------
             subject = f"Welcome {user.username} 🎉 - Registration Successful"
+
             html_content = f"""
             <html>
             <body style="font-family: Arial; line-height:1.6;">
@@ -55,10 +64,11 @@ def register(request):
             """
 
             text_content = strip_tags(html_content)
+
             email = EmailMultiAlternatives(
                 subject,
                 text_content,
-                "shri2178499@gmail.com",   # ✅ verified sender in SES
+                settings.DEFAULT_FROM_EMAIL,   # Gmail sender from settings.py
                 [user.email],
             )
             email.attach_alternative(html_content, "text/html")
@@ -69,6 +79,7 @@ def register(request):
                 print("⚠️ Error sending registration email:", e)
 
             return redirect(f"{reverse('login')}?registered=1")
+
     else:
         user_form = CustomUserCreationForm()
         profile_form = ProfileForm()
@@ -77,6 +88,7 @@ def register(request):
         "user_form": user_form,
         "profile_form": profile_form,
     })
+
 
 
 @never_cache
