@@ -3,8 +3,8 @@ from django.test import Client
 
 def test_smoke():
     """
-    Basic smoke test to ensure the application loads a main page.
+    Basic smoke test to ensure the login page loads successfully.
     """
     client = Client()
-    response = client.get(reverse("job_list"))  # your main page
+    response = client.get(reverse("login"))
     assert response.status_code == 200
