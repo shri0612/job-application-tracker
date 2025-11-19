@@ -6,8 +6,6 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    # os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jobApplicationTracker.jobApplicationTracker.settings')
-    # os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jobApplicationTracker.settings')
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jobApplicationTracker.settings')
 
 
