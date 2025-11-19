@@ -4,7 +4,7 @@ from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
-    # 🏠 Redirect root to login
+    #  Redirect root to login
     path('', lambda request: redirect('login')),
 
     # 👤 Authentication routes
@@ -13,7 +13,7 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("profile/", views.profile_view, name="profile"),
 
-    # 🔑 Password Reset workflow
+    # Password Reset workflow
     path(
         "password_reset/",
         auth_views.PasswordResetView.as_view(
@@ -45,4 +45,5 @@ urlpatterns = [
         ),
         name="password_reset_complete",
     ),
+    path("profile/", views.profile_view, name="profile"),
 ]
