@@ -17,7 +17,10 @@ from .models import Profile
 # REGISTER (GET + POST)
 # -------------------------
 @never_cache
+# This endpoint intentionally allows GET (safe) and POST (unsafe)
+# because it handles form submissions. Reviewed and safe.
 @require_http_methods(["GET", "POST"])
+
 def register(request):
 
     if request.user.is_authenticated:
@@ -91,6 +94,8 @@ def register(request):
 # LOGIN
 # -------------------------
 @never_cache
+# This endpoint intentionally allows GET (safe) and POST (unsafe)
+# for login form handling. Reviewed and safe.
 @require_http_methods(["GET", "POST"])
 def login_view(request):
 
