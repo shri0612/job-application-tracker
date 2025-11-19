@@ -14,14 +14,17 @@
                 <li>{{ field.label }} — {{ error }}</li>
               {% endfor %}
             {% endfor %}
+
             {% for field in profile_form %}
               {% for error in field.errors %}
                 <li>{{ field.label }} — {{ error }}</li>
               {% endfor %}
             {% endfor %}
+
             {% for error in user_form.non_field_errors %}
               <li>{{ error }}</li>
             {% endfor %}
+
             {% for error in profile_form.non_field_errors %}
               <li>{{ error }}</li>
             {% endfor %}
@@ -32,20 +35,25 @@
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
-        <!-- User Info -->
+        <!-- Email -->
         <div class="mb-3">
           {{ user_form.email.label_tag }}
           {{ user_form.email }}
         </div>
 
+        <!-- Password 1 -->
         <div class="mb-3">
           {{ user_form.password1.label_tag }}
           {{ user_form.password1 }}
+
           {% if user_form.password1.help_text %}
-            <small class="text-muted">{{ user_form.password1.help_text|safe }}</small>
+            <small class="text-muted">
+              {{ user_form.password1.help_text }}
+            </small>
           {% endif %}
         </div>
 
+        <!-- Password 2 -->
         <div class="mb-3">
           {{ user_form.password2.label_tag }}
           {{ user_form.password2 }}
@@ -53,7 +61,7 @@
 
         <hr class="my-4">
 
-       
+        <!-- Profile Picture -->
         <div class="mb-3">
           {{ profile_form.profile_picture.label_tag }}
           {{ profile_form.profile_picture }}
