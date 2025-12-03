@@ -6,9 +6,7 @@ on:
 
 jobs:
 
-  # ----------------------------------------------------
-  # 1. CI — Lint, Security Scan, Tests, Coverage, Sonar
-  # ----------------------------------------------------
+  # --------------------------- CI ---------------------------
   ci:
     name: Lint + Security + Tests + Sonar
     runs-on: ubuntu-latest
@@ -22,7 +20,6 @@ jobs:
         with:
           python-version: "3.10"
 
-      # ------------ Cache Python Dependencies ------------
       - name: Cache pip packages
         uses: actions/cache@v3
         with:
@@ -31,27 +28,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      # ------------ Install Dependencies ------------
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install flake8 bandit pytest pytest-django pytest-cov
 
-      # ------------ Linting ------------
       - name: Run flake8
         run: flake8 . || true
 
-      # ------------ Static Security Scan ------------
       - name: Run bandit
         run: bandit -r . || true
 
-      # ------------ Tests + Coverage ------------
       - name: Run tests with coverage
         run: |
           pytest --cov=. --cov-report=xml
 
-      # ------------ SonarCloud ------------
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
         env:
@@ -63,35 +55,16 @@ jobs:
             -Dsonar.organization=${{ secrets.SONAR_ORG }}
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.sources=.
-            -Dsonar.exclusions=**/env/**,**/venv/**,**/.venv/**,**/migrations/**,**/static/**,**/__pycache__/**,**/settings.py,**/manage.py
+            -Dsonar.exclusions=**/env/**,**/venv/**,**/.venv/**,**/migrations/**,**/static/**,**/__pycache__/**
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=3.10
 
 
-
-  # ----------------------------------------------------
-  # 2. ZAP Dynamic Scan (After CI, Before Deploy)
-  # ----------------------------------------------------
-  zap_scan:
-    name: OWASP ZAP Baseline Scan
-    runs-on: ubuntu-latest
-    needs: ci
-
-    steps:
-      - name: ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.10.0
-        with:
-          target: ${{ secrets.APP_URL }}   # your deployed EC2 app URL
-
-
-
-  # ----------------------------------------------------
-  # 3. CD — Deploy to EC2
-  # ----------------------------------------------------
+  # ------------------------ DEPLOY -------------------------
   deploy:
     name: Deploy to EC2
-    needs: [ci, zap_scan]   # deploy AFTER CI + ZAP
     runs-on: ubuntu-latest
+    needs: ci     # << CORRECT ORDER
 
     steps:
       - name: Checkout Code
@@ -110,9 +83,9 @@ jobs:
 
             echo ">>> Pulling latest code"
             if [ ! -d repo ]; then
-                git clone https://github.com/${{ github.repository }} repo
+              git clone https://github.com/${{ github.repository }} repo
             else
-                cd repo && git pull origin main --depth=1 && cd ..
+              cd repo && git pull origin main --depth=1 && cd ..
             fi
 
             echo ">>> Activating venv"
@@ -133,3 +106,16 @@ jobs:
             sudo systemctl reload gunicorn || sudo systemctl restart gunicorn
 
             echo ">>> Deployment complete!"
+
+
+  # ------------------------ ZAP SCAN -----------------------
+  zap_scan:
+    name: OWASP ZAP Baseline Scan
+    runs-on: ubuntu-latest
+    needs: deploy   # << ZAP AFTER DEPLOY
+
+    steps:
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: ${{ secrets.APP_URL }}   # http://your-ec2-ip
