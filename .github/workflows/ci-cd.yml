@@ -1,3 +1,4 @@
+permissions: write-all
 name: CI-CD Pipeline
 
 on:
@@ -38,7 +39,7 @@ jobs:
         run: flake8 . || true
 
       - name: Run bandit
-        run: bandit -r . || true
+        run: bandit -r . -x env,venv,migrations,.git || true
 
       - name: Run tests with coverage
         run: |
@@ -64,7 +65,7 @@ jobs:
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
-    needs: ci     # << CORRECT ORDER
+    needs: ci
 
     steps:
       - name: Checkout Code
@@ -109,13 +110,15 @@ jobs:
 
 
   # ------------------------ ZAP SCAN -----------------------
-  zap_scan:
+  zap:
     name: OWASP ZAP Baseline Scan
     runs-on: ubuntu-latest
-    needs: deploy   # << ZAP AFTER DEPLOY
+    needs: deploy
+    permissions: write-all
 
     steps:
-      - name: ZAP Baseline Scan
+      - name: Run ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.10.0
         with:
-          target: ${{ secrets.APP_URL }}   # http://your-ec2-ip
+          target: ${{ secrets.APP_URL }}
+          allow_issue_writing: true
