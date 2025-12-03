@@ -115,11 +115,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: deploy
     permissions: write-all
-
+  
     steps:
-      - name: Run ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.10.0
-        with:
-          target: ${{ secrets.APP_URL }}
-          allow_issue_writing: true
-          artifact_name: zapreport
+    - name: Run ZAP Baseline Scan
+      uses: zaproxy/action-baseline@v0.10.0
+      with:
+        target: ${{ secrets.APP_URL }}
+        allow_issue_writing: false
+        publish_artifact: false
