@@ -109,18 +109,17 @@ jobs:
             echo ">>> Deployment complete!"
 
 
-  # ------------------------ ZAP SCAN -----------------------
+    # ------------------------ ZAP SCAN -----------------------
   zap:
-   name: OWASP ZAP Baseline Scan
-   runs-on: ubuntu-latest
-   needs: deploy
-   permissions: write-all
+    name: OWASP ZAP Baseline Scan
+    runs-on: ubuntu-latest
+    needs: deploy
+    permissions: write-all
 
-  steps:
-    - name: Run ZAP Baseline Scan
-      uses: zaproxy/action-baseline@v0.10.0
-      with:
-        target: ${{ secrets.APP_URL }}
-        allow_issue_writing: true
-        artifact_name: zapreport
-
+    steps:
+      - name: Run ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: ${{ secrets.APP_URL }}
+          allow_issue_writing: true
+          artifact_name: zapreport
