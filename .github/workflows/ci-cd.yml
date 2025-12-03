@@ -123,3 +123,6 @@ jobs:
         target: ${{ secrets.APP_URL }}
         allow_issue_writing: false
         publish_artifact: false
+        cmd_options: "-J /dev/null -w /dev/null -r /dev/null"
+  
+ 
