@@ -111,10 +111,10 @@ jobs:
 
   # ------------------------ ZAP SCAN -----------------------
   zap:
-  name: OWASP ZAP Baseline Scan
-  runs-on: ubuntu-latest
-  needs: deploy
-  permissions: write-all
+   name: OWASP ZAP Baseline Scan
+   runs-on: ubuntu-latest
+   needs: deploy
+   permissions: write-all
 
   steps:
     - name: Run ZAP Baseline Scan
