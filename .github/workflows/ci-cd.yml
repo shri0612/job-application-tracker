@@ -40,9 +40,9 @@ jobs:
       - name: Run flake8
         run: flake8 . || true
 
-      # Optional (enable later if needed)
-      # - name: Run bandit
-      #   run: bandit -r . -x env,venv,migrations,.git || true
+      Optional (enable later if needed)
+      - name: Run bandit
+        run: bandit -r . -x env,venv,migrations,.git || true
 
       - name: Run tests with coverage
         run: |
