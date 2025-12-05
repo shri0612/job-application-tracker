@@ -137,3 +137,6 @@ DEFAULT_SITE_NAME = "Job Application Tracker"
 
 # Default Auto Field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+STATIC_URL = '/static/'
+STATIC_ROOT = '/home/ubuntu/jobtracker/staticfiles'
+
