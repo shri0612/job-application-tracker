@@ -131,7 +131,7 @@ jobs:
         run: |
           rm -rf zap-output
           mkdir -p zap-output
-          chmod 777 zap-output
+          chmod 755 zap-output
 
       - name: Run ZAP Baseline Scan (Docker mode)
         run: |
