@@ -1,4 +1,6 @@
-permissions: write-all
+permissions:
+  contents: read
+
 name: CI-CD Pipeline
 
 on:
@@ -8,7 +10,7 @@ on:
 jobs:
 
   # ----------------------------------------------------
-  # 1️⃣ CI JOB — Lint, Security Scan, Tests, SonarCloud
+  # 1️⃣ CI JOB — Lint + Security Scan + Tests + SonarCloud
   # ----------------------------------------------------
   ci:
     name: Lint + Security + Tests + Sonar
@@ -44,27 +46,24 @@ jobs:
         run: bandit -r . -x env,venv,migrations,.git || true
 
       - name: Run tests with coverage
-        run: |
-          pytest --cov=. --cov-report=xml
+        run: pytest --cov=. --cov-report=xml
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          projectBaseDir: .
           args: |
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
             -Dsonar.organization=${{ secrets.SONAR_ORG }}
-            -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.sources=.
-            -Dsonar.exclusions=**/env/**,**/venv/**,**/.venv/**,**/migrations/**,**/static/**,**/__pycache__/**
+            -Dsonar.exclusions=**/env/**,**/venv/**,**/migrations/**,**/static/**,**/__pycache__/**
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=3.10
 
 
   # ----------------------------------------------------
-  # 2️⃣ DEPLOY JOB — Deploy Django App to EC2 via SSH
+  # 2️⃣ DEPLOY JOB
   # ----------------------------------------------------
   deploy:
     name: Deploy to EC2
@@ -85,33 +84,31 @@ jobs:
             echo ">>> Connected to EC2"
             cd /home/ubuntu/jobtracker
 
-            echo ">>> Pulling latest repository updates"
+            echo ">>> Pulling updates"
             cd repo
             git fetch --all
             git reset --hard origin/main
             cd ..
 
-            echo ">>> Creating / Activating virtual environment"
-            if [ ! -d venv ]; then
-              python3 -m venv venv
-            fi
+            echo ">>> Virtual environment"
+            if [ ! -d venv ]; then python3 -m venv venv; fi
             source venv/bin/activate
 
-            echo ">>> Installing dependencies"
+            echo ">>> Installing deps"
             pip install --upgrade pip
             pip install -r repo/requirements.txt
 
-            echo ">>> Running migrations"
+            echo ">>> Migrating"
             cd repo
             python3 manage.py migrate --noinput
 
-            echo ">>> Collecting static files"
+            echo ">>> Collect static"
             python3 manage.py collectstatic --noinput
 
             echo ">>> Restarting Gunicorn"
             sudo systemctl restart gunicorn
 
-            echo ">>> Deployment complete!"
+            echo ">>> Deployment done!"
 
 
   # ----------------------------------------------------
@@ -121,7 +118,6 @@ jobs:
     name: OWASP ZAP Baseline Scan
     runs-on: ubuntu-latest
     needs: deploy
-    permissions: write-all
 
     steps:
       - name: Checkout
@@ -133,15 +129,15 @@ jobs:
           mkdir -p zap-output
           chmod 755 zap-output
 
-      - name: Run ZAP Baseline Scan (Docker mode)
+      - name: Run ZAP Baseline Scan
+        env:
+          TARGET_URL: ${{ secrets.APP_URL }}
         run: |
           docker run --rm \
-          --network=host \
           -v "$PWD:/zap/wrk:rw" \
           ghcr.io/zaproxy/zaproxy:stable \
           zap-baseline.py \
-          -t "${{ secrets.APP_URL }}" \
-          -a \
+          -t "$TARGET_URL" \
           -m 5 \
           -T 5 \
           -I \
@@ -149,14 +145,9 @@ jobs:
           -J zap-output/zap_report.json \
           -w zap-output/zap_warnings.md || echo "ZAP finished with warnings"
 
-      - name: List ZAP output
-        if: always()
-        run: ls -lah zap-output
-
       - name: Upload ZAP artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: zap-report
           path: zap-output/*
-          if-no-files-found: warn
