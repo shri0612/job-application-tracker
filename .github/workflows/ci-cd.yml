@@ -57,14 +57,14 @@ jobs:
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
             -Dsonar.organization=${{ secrets.SONAR_ORG }}
             -Dsonar.sources=.
-            -Dsonar.exclusions=**/env/**,**/venv/**,**/migrations/**,**/static/**,**/__pycache__/**
+            -Dsonar.exclusions=**/env/**,**/venv/**,**/migrations/**,**/static/**,**/__pycache__/**,**/manage.py/**
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=3.10
 
 
-  # ----------------------------------------------------
-  # 2️⃣ DEPLOY JOB
-  # ----------------------------------------------------
+  
+  # DEPLOY JOB
+  
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
