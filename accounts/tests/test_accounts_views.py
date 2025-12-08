@@ -53,6 +53,20 @@ def test_login_page_loads(client):
 
 @pytest.mark.django_db
 def test_login_valid_user(client):
+    User.objects.create_user(
+        username="testuser",
+        email="test@example.com",
+        password="Testpass123!"
+    )
+
+    response = client.post(
+        reverse("login"),
+        {"username": "test@example.com", "password": "Testpass123!"}
+    )
+
+    assert response.status_code == 302
+    assert response.url == reverse("job_list")
+
     user = User.objects.create_user(
         username="testuser",
         email="test@example.com",
