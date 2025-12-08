@@ -3,6 +3,10 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from jobs.models import Job
 
+
+# -------------------------------
+# 1. job_list view
+# -------------------------------
 @pytest.mark.django_db
 def test_job_list_page_loads(client):
     user = User.objects.create_user(username="testuser", password="testpass")
@@ -11,17 +15,20 @@ def test_job_list_page_loads(client):
     Job.objects.create(
         title="Test Job",
         company="Test Company",
-        location="Dublin",
         status="Applied",
+        notes="Testing notes",
         user=user
     )
 
     response = client.get(reverse("job_list"))
-
+    
     assert response.status_code == 200
     assert b"Test Job" in response.content
 
 
+# -------------------------------
+# 2. add_job view
+# -------------------------------
 @pytest.mark.django_db
 def test_add_job_creates_entry(client):
     user = User.objects.create_user(username="testuser", password="testpass")
@@ -30,8 +37,9 @@ def test_add_job_creates_entry(client):
     job_data = {
         "title": "Backend Developer",
         "company": "Google",
-        "location": "Remote",
         "status": "Applied",
+        "notes": "A test note",
+        "date_applied": "2025-01-01"
     }
 
     response = client.post(reverse("add_job"), job_data)
@@ -40,6 +48,9 @@ def test_add_job_creates_entry(client):
     assert Job.objects.filter(title="Backend Developer", user=user).exists()
 
 
+# -------------------------------
+# 3. edit_job view
+# -------------------------------
 @pytest.mark.django_db
 def test_edit_job_updates_entry(client):
     user = User.objects.create_user(username="testuser", password="testpass")
@@ -47,27 +58,32 @@ def test_edit_job_updates_entry(client):
 
     job = Job.objects.create(
         title="Old Title",
-        company="Test",
-        location="Test",
+        company="Test Company",
         status="Applied",
+        notes="Old note",
         user=user
     )
 
     updated_data = {
         "title": "New Title",
-        "company": "Test",
-        "location": "Test",
+        "company": "Test Company",
         "status": "Interview",
+        "notes": "Updated note"
     }
 
     response = client.post(reverse("edit_job", args=[job.id]), updated_data)
 
     assert response.status_code == 302
+
     job.refresh_from_db()
     assert job.title == "New Title"
     assert job.status == "Interview"
+    assert job.notes == "Updated note"
 
 
+# -------------------------------
+# 4. delete_job view
+# -------------------------------
 @pytest.mark.django_db
 def test_delete_job_removes_entry(client):
     user = User.objects.create_user(username="testuser", password="testpass")
@@ -75,9 +91,9 @@ def test_delete_job_removes_entry(client):
 
     job = Job.objects.create(
         title="Delete Me",
-        company="Test",
-        location="Test",
+        company="Test Company",
         status="Applied",
+        notes="Delete note",
         user=user
     )
 
