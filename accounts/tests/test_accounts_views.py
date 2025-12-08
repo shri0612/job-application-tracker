@@ -5,9 +5,9 @@ from django.contrib.auth import get_user
 from accounts.models import Profile
 
 
-# =====================================================
+
 # REGISTER VIEW TESTS
-# =====================================================
+
 
 @pytest.mark.django_db
 def test_register_page_loads(client):
@@ -29,23 +29,19 @@ def test_register_creates_user_and_profile(client):
     }
 
     response = client.post(reverse("register"), data)
-
-    # Should redirect to login with ?registered=1
     assert response.status_code == 302
     assert "login" in response.url
 
-    # User should exist
     user = User.objects.filter(email="test@example.com").first()
     assert user is not None
 
-    # Profile should exist
     profile = Profile.objects.filter(user=user).first()
     assert profile is not None
 
 
-# =====================================================
+
 # LOGIN VIEW TESTS
-# =====================================================
+
 
 @pytest.mark.django_db
 def test_login_page_loads(client):
@@ -55,49 +51,51 @@ def test_login_page_loads(client):
 
 @pytest.mark.django_db
 def test_login_valid_user(client):
-    # Create a unique user
+    # 🔥 IMPORTANT: username = email because the login form uses email as username
     User.objects.create_user(
-        username="loginuser",
+        username="test@example.com",
         email="test@example.com",
         password="Testpass123!"
     )
 
-    # EmailAuthenticationForm expects email + password
+    # Login form expects: {"username": email, "password": password}
     response = client.post(
         reverse("login"),
-        {"email": "test@example.com", "password": "Testpass123!"}
+        {"username": "test@example.com", "password": "Testpass123!"}
     )
 
-    # Should redirect to job_list after login
     assert response.status_code == 302
     assert response.url == reverse("job_list")
 
-    # User must be logged in
     logged_in_user = get_user(client)
     assert logged_in_user.is_authenticated
 
 
-# =====================================================
+
 # LOGOUT VIEW TEST
-# =====================================================
+
 
 @pytest.mark.django_db
 def test_logout_logs_out_user(client):
-    user = User.objects.create_user(username="logoutuser", password="pass12345")
-    client.login(username="logoutuser", password="pass12345")
+    user = User.objects.create_user(
+        username="logout@example.com",
+        email="logout@example.com",
+        password="pass12345"
+    )
+
+    client.login(username="logout@example.com", password="pass12345")
 
     response = client.get(reverse("logout"))
     assert response.status_code == 302
     assert response.url == reverse("login")
 
-    # Should be logged out
     logged_in_user = get_user(client)
     assert not logged_in_user.is_authenticated
 
 
-# =====================================================
+
 # PROFILE VIEW TESTS
-# =====================================================
+
 
 @pytest.mark.django_db
 def test_profile_requires_login(client):
@@ -109,14 +107,14 @@ def test_profile_requires_login(client):
 @pytest.mark.django_db
 def test_profile_loads_for_authenticated_user(client):
     user = User.objects.create_user(
-        username="profileuser",
-        password="pass12345",
-        email="a@a.com"
+        username="a@a.com",
+        email="a@a.com",
+        password="pass12345"
     )
 
     Profile.objects.create(user=user, email=user.email)
 
-    client.login(username="profileuser", password="pass12345")
+    client.login(username="a@a.com", password="pass12345")
     response = client.get(reverse("profile"))
 
     assert response.status_code == 200

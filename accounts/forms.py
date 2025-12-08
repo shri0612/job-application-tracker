@@ -5,7 +5,7 @@ from .models import Profile
 
 User = get_user_model()
 
-# ✅ Login Form (Email-based)
+# Login Form (Email-based)
 class EmailAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(
         label="Email",
@@ -17,7 +17,7 @@ class EmailAuthenticationForm(AuthenticationForm):
     )
 
 
-# ✅ User Creation Form (for User model)
+# User Creation Form (for User model)
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
         required=True,
@@ -40,7 +40,7 @@ class CustomUserCreationForm(UserCreationForm):
         return email
 
 
-# ✅ Profile Form (for extra details + picture)
+#  Profile Form (for extra details + picture)
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
