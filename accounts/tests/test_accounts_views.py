@@ -118,4 +118,6 @@ def test_profile_loads_for_authenticated_user(client):
     response = client.get(reverse("profile"))
 
     assert response.status_code == 200
-    assert b"email" in response.content or b"profile" in response.content
+
+    # The profile page should display the user's email somewhere
+    assert user.email.encode() in response.content
