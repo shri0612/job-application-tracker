@@ -27,7 +27,7 @@ def add_job(request):
         form = JobForm(request.POST)
         if form.is_valid():
             job = form.save(commit=False)
-            job.user = request.user  # link job to logged-in user
+            job.user = request.user  
             job.save()
             return redirect('job_list')
     else:
@@ -38,7 +38,7 @@ def add_job(request):
 @never_cache
 def edit_job(request, id):
     try:
-        job = Job.objects.get(id=id, user=request.user)  # ✅ only this user's job
+        job = Job.objects.get(id=id, user=request.user)  
     except Job.DoesNotExist:
         return HttpResponseNotFound("<h2>This job does not exist or you have deleted the job.</h2>")
 
@@ -57,7 +57,7 @@ def edit_job(request, id):
 @never_cache
 def delete_job(request, id):
     try:
-        job = Job.objects.get(id=id, user=request.user)  # ✅ only this user's job
+        job = Job.objects.get(id=id, user=request.user)  
     except Job.DoesNotExist:
         return HttpResponseNotFound("<h2>This job does not exist or you have deleted the job.</h2>")
 

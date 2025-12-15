@@ -10,7 +10,7 @@ on:
 jobs:
 
   # ----------------------------------------------------
-  # 1️⃣ CI JOB — Lint + Security Scan + Tests + SonarCloud
+  #  CI JOB — Lint + Security Scan + Tests + SonarCloud
   # ----------------------------------------------------
   ci:
     name: Lint + Security + Tests + Sonar

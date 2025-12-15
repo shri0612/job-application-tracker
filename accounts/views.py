@@ -13,9 +13,9 @@ from .forms import CustomUserCreationForm, ProfileForm, EmailAuthenticationForm
 from .models import Profile
 
 
-# -------------------------
+
 # REGISTER (GET + POST)
-# -------------------------
+
 @never_cache
 # This endpoint intentionally allows GET (safe) and POST (unsafe)
 # because it handles form submissions. Reviewed and safe.
@@ -90,9 +90,9 @@ def register(request):
     })
 
 
-# -------------------------
+
 # LOGIN
-# -------------------------
+
 @never_cache
 # This endpoint intentionally allows GET (safe) and POST (unsafe)
 # for login form handling. Reviewed and safe.
@@ -113,9 +113,9 @@ def login_view(request):
     return render(request, "accounts/login.html", {"form": form})
 
 
-# -------------------------
+
 # LOGOUT (GET)
-# -------------------------
+
 @never_cache
 @require_http_methods(["GET"])
 def logout_view(request):
@@ -123,9 +123,9 @@ def logout_view(request):
     return redirect("login")
 
 
-# -------------------------
+
 # PROFILE VIEW
-# -------------------------
+
 @login_required
 @require_http_methods(["GET"])
 def profile_view(request):
